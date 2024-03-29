@@ -1,0 +1,330 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+
+#define MAX_CANDIDATES 11 // Increased for NOTA
+#define MAX_VOTERS 100
+
+typedef struct {
+    int id;
+    char name[50];
+    char symbol[50];
+    char gender[10];
+    char aadhar[13]; // Increased to allow a maximum of 12 numbers
+    int votes;
+    int age; // Added age field
+    float assets;
+} Candidate;
+
+typedef struct {
+    int id;
+    char name[50];
+    int age;
+    int voted;
+} Voter;
+
+Candidate candidates[MAX_CANDIDATES];
+Voter voters[MAX_VOTERS];
+
+int num_candidates = 0;
+int num_voters = 0;
+
+void add_candidate() {
+    if (num_candidates >= MAX_CANDIDATES) {
+        printf("Error: Maximum number of candidates reached.\n");
+        return;
+    }
+
+    printf("Enter candidate ID: ");
+    scanf("%d", &candidates[num_candidates].id);
+
+    printf("Enter candidate name: ");
+    scanf("%s", candidates[num_candidates].name);
+
+    printf("Enter candidate age: ");
+    scanf("%d", &candidates[num_candidates].age);
+
+    if (candidates[num_candidates].age < 18) {
+        int remaining_years = 18 - candidates[num_candidates].age;
+        if (remaining_years == 1)
+            printf("Sorry, the candidate must be at least 18 years old to participate. Please wait for 1 more year.\n");
+        else
+            printf("Sorry, the candidate must be at least 18 years old to participate. Please wait for %d more years.\n", remaining_years);
+
+        return;
+    }
+
+    if (candidates[num_candidates].id != 0) {
+        printf("Enter candidate symbol: ");
+        scanf("%s", candidates[num_candidates].symbol);
+
+        printf("Enter candidate gender: ");
+        scanf("%s", candidates[num_candidates].gender);
+
+        while (strcmp(candidates[num_candidates].gender, "m") != 0 &&
+               strcmp(candidates[num_candidates].gender, "f") != 0 &&
+               strcmp(candidates[num_candidates].gender, "other") != 0) {
+            printf("Error: Invalid gender. Please enter 'm' for male, 'f' for female, or 'other' for other gender.\n");
+            printf("Enter candidate gender ('m' for male, 'f' for female, 'other' for other gender): ");
+            scanf("%s", candidates[num_candidates].gender);
+        }
+
+        printf("Enter candidate Aadhar number: ");
+        scanf("%s", candidates[num_candidates].aadhar);
+
+        if (strlen(candidates[num_candidates].aadhar) > 12) {
+            printf("Error: Aadhar number cannot exceed 12 numbers.\n");
+            printf("Enter candidate Aadhar number: ");
+            scanf("%s", candidates[num_candidates].aadhar);
+        }
+
+        printf("Enter candidate assets: ");
+        scanf("%f", &candidates[num_candidates].assets);
+    }
+
+    candidates[num_candidates].votes = 0;
+    num_candidates++;
+
+    printf("Candidate added successfully.\n");
+}
+
+void list_candidates() {
+    int sort_choice;
+
+    printf("Sort candidates by:\n");
+    printf("1. ID\n");
+    printf("2. Age\n");
+    printf("3. Assets\n");
+    printf("4. Name\n");
+    printf("5. Gender (Male > Female > Other)\n");
+    printf("Enter your sorting choice: ");
+    scanf("%d", &sort_choice);
+
+    // sort candidates based on sorting choice
+    switch (sort_choice) {
+        case 1:
+            // sort candidates by ID
+            for (int i = 0; i < num_candidates - 1; i++) {
+                for (int j = 0; j < num_candidates - i - 1; j++) {
+                    if (candidates[j].id > candidates[j + 1].id) {
+                        Candidate temp = candidates[j];
+                        candidates[j] = candidates[j + 1];
+                        candidates[j + 1] = temp;
+                    }
+                }
+            }
+            break;
+        case 2:
+            // sort candidates by age
+            for (int i = 0; i < num_candidates - 1; i++) {
+                for (int j = 0; j < num_candidates - i - 1; j++) {
+                    if (candidates[j].age > candidates[j + 1].age) {
+                        Candidate temp = candidates[j];
+                        candidates[j] = candidates[j + 1];
+                        candidates[j + 1] = temp;
+                    }
+                }
+            }
+            break;
+        case 3:
+            // sort candidates by assets
+            for (int i = 0; i < num_candidates - 1; i++) {
+                for (int j = 0; j < num_candidates - i - 1; j++) {
+                    if (candidates[j].assets > candidates[j + 1].assets) {
+                        Candidate temp = candidates[j];
+                        candidates[j] = candidates[j + 1];
+                        candidates[j + 1] = temp;
+                    }
+                }
+            }
+            break;
+        case 4:
+            // sort candidates by name
+            for (int i = 0; i < num_candidates - 1; i++) {
+                for (int j = 0; j < num_candidates - i - 1; j++) {
+                    if (strcmp(candidates[j].name, candidates[j + 1].name) > 0) {
+                        Candidate temp = candidates[j];
+                        candidates[j] = candidates[j + 1];
+                        candidates[j + 1] = temp;
+                    }
+                }
+            }
+            break;
+        case 5:
+            // sort candidates by gender (Male > Female > Other)
+            for (int i = 0; i < num_candidates - 1; i++) {
+                for (int j = 0; j < num_candidates - i - 1; j++) {
+                    if (strcmp(candidates[j].gender, "m") == 0 && strcmp(candidates[j + 1].gender, "f") == 0) {
+                        Candidate temp = candidates[j];
+                        candidates[j] = candidates[j + 1];
+                        candidates[j + 1] = temp;
+                    } else if (strcmp(candidates[j].gender, "m") == 0 && strcmp(candidates[j + 1].gender, "other") == 0) {
+                        Candidate temp = candidates[j];
+                        candidates[j] = candidates[j + 1];
+                        candidates[j + 1] = temp;
+                    } else if (strcmp(candidates[j].gender, "f") == 0 && strcmp(candidates[j + 1].gender, "other") == 0) {
+                        Candidate temp = candidates[j];
+                        candidates[j] = candidates[j + 1];
+                        candidates[j + 1] = temp;
+                    }
+                }
+            }
+            break;
+        default:
+            printf("Invalid sorting choice.\n");
+            return;
+    }
+
+    // print candidates
+    for (int i = 0; i < num_candidates; i++) {
+        if (candidates[i].age < 18) {
+            int remaining_years = 18 - candidates[i].age;
+            if (remaining_years == 1)
+                printf("ID: %d\nName: %s\nSymbol: %s\nGender: %s\nAadhar No.: %s\nAge: %d (Wait for 1 more year to participate)\nAssets: %f\n\n", candidates[i].id, candidates[i].name, candidates[i].symbol, candidates[i].gender, candidates[i].aadhar, candidates[i].age, candidates[i].assets);
+            else
+                printf("ID: %d\nName: %s\nSymbol: %s\nGender: %s\nAadhar No.: %s\nAge: %d (Wait for %d more years to participate)\nAssets: %f\n\n", candidates[i].id, candidates[i].name, candidates[i].symbol, candidates[i].gender, candidates[i].aadhar, candidates[i].age, remaining_years, candidates[i].assets);
+        } else {
+            printf("ID: %d\nName: %s\nSymbol: %s\nGender: %s\nAadhar No.: %s\nAge: %d\nAssets: %f\n\n", candidates[i].id, candidates[i].name, candidates[i].symbol, candidates[i].gender, candidates[i].aadhar, candidates[i].age, candidates[i].assets);
+        }
+
+    }
+}
+
+void add_voter() {
+    if (num_voters >= MAX_VOTERS) {
+        printf("Error: Maximum number of voters reached.\n");
+        return;
+    }
+
+    printf("Enter voter ID: ");
+    scanf("%d", &voters[num_voters].id);
+
+    printf("Enter voter name: ");
+    scanf("%s", voters[num_voters].name);
+
+    printf("Enter voter age: ");
+    scanf("%d", &voters[num_voters].age);
+
+    if (voters[num_voters].age < 18) {
+        int remaining_years = 18 - voters[num_voters].age;
+        if (remaining_years == 1)
+            printf("Sorry, you are not eligible to vote. Please wait for 1 more year to cast your vote.\n");
+        else
+            printf("Sorry, you are not eligible to vote. Please wait for %d more years to cast your vote.\n", remaining_years);
+    
+        return;
+    }
+
+    voters[num_voters].voted = 0;
+    num_voters++;
+
+    printf("Voter added successfully.\n");
+}
+
+void cast_vote() {
+    int voter_id, candidate_id;
+
+    printf("Enter voter ID: ");
+    scanf("%d", &voter_id);
+
+    for (int i = 0; i < num_voters; i++) {
+        if (voters[i].id == voter_id) {
+            if (voters[i].voted) {
+                printf("Error: Voter has already cast a vote.\n");
+                return;
+            }
+
+            if (voters[i].age < 18) {
+                int remaining_years = 18 - voters[i].age;
+                printf("Sorry, you are not eligible to vote. Please wait for %d more years to cast your vote.\n", remaining_years);
+                return;
+            }
+
+            printf("Enter candidate ID: ");
+            scanf("%d", &candidate_id);
+
+            for (int j = 0; j < num_candidates; j++) {
+                if (candidates[j].id == candidate_id) {
+                    candidates[j].votes++;
+                    voters[i].voted = 1;
+                    printf("Vote cast successfully.\n");
+                    return;
+                }
+            }
+
+            printf("Error: Invalid candidate ID.\n");
+            return;
+        }
+    }
+
+    printf("Error: Invalid voter ID.\n");
+}
+
+void list_results() {
+    int total_votes = 0;
+    int winner_index = 0;
+
+    // calculate total votes and find winner
+    for (int i = 0; i < num_candidates; i++) {
+        total_votes += candidates[i].votes;
+        if (candidates[i].votes > candidates[winner_index].votes) {
+            winner_index = i;
+        }
+    }
+
+    printf("Total votes: %d\n", total_votes);
+
+    if (total_votes == 0) {
+        printf("No votes casted.\n");
+        return;
+    }
+
+    printf("Winner:\n");
+    printf("ID: %d\nName: %s\nSymbol: %s\nGender: %s\nAadhar No.: %s\nAge: %d\nAssets: %f\nVotes: %d\n\n", candidates[winner_index].id, candidates[winner_index].name, candidates[winner_index].symbol, candidates[winner_index].gender, candidates[winner_index].aadhar, candidates[winner_index].age, candidates[winner_index].assets, candidates[winner_index].votes);
+
+    printf("Candidates:\n");
+    for (int i = 0; i < num_candidates; i++) {
+        printf("ID: %d\nName: %s\nSymbol: %s\nGender: %s\nAadhar No.: %s\nAge: %d\nAssets: %f\nVotes: %d\n\n", candidates[i].id, candidates[i].name, candidates[i].symbol, candidates[i].gender, candidates[i].aadhar, candidates[i].age, candidates[i].assets, candidates[i].votes);
+    }
+}
+
+int main() {
+    int choice;
+
+    while (1) {
+        printf("Election Management System\n");
+        printf("1. Add Candidate\n");
+        printf("2. List Candidates\n");
+        printf("3. Add Voter\n");
+        printf("4. Cast Vote\n");
+        printf("5. List Results\n");
+        printf("6. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                add_candidate();
+                break;
+            case 2:
+                list_candidates();
+                break;
+            case 3:
+                add_voter();
+                break;
+            case 4:
+                cast_vote();
+                break;
+            case 5:
+                list_results();
+                break;
+            case 6:
+                printf("Exiting...\n");
+                return 0;
+            default:
+                printf("Invalid choice.\n");
+        }
+    }
+
+    return 0;
+}
